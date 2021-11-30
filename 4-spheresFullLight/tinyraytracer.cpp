@@ -58,13 +58,17 @@ bool scene_intersect(const vec3 &orig, const vec3 &dir, const std::vector<Sphere
     return spheres_dist < 1000;
 }
 
-vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &spheres, const std::vector<Light> &lights) {
+vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &spheres, const std::vector<Light> &lights, size_t depth=0) {
     vec3 point, N;
     Material material;
 
-    if (!scene_intersect(orig, dir, spheres, point, N, material)) {
+    if (depth > 4 || !scene_intersect(orig, dir, spheres, point, N, material)) {
         return vec3{0.2, 0.7, 0.8}; // background color
     }
+
+    vec3 reflect_dir = reflect(dir, N).normalize();
+    vec3 reflect_orig = reflect_dir * N < 0 ? point - N*1e-3 : point + N*1e-3; // offset the original point to avoid occlusion by the object itself
+    vec3 reflect_color = cast_ray(reflect_orig, reflect_dir, spheres, lights, depth + 1);
 
     float diffuse_light_intensity = 0, specular_light_intensity = 0;
     for (size_t i=0; i<lights.size(); i++) {
@@ -79,7 +83,7 @@ vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sphe
         diffuse_light_intensity  += lights[i].intensity * std::max(0.f, light_dir*N);
         specular_light_intensity += powf(std::max(0.f, reflect(light_dir, N) * dir), material.specular_exponent) * lights[i].intensity;
     }
-    return material.diffuse_color * diffuse_light_intensity * material.albedo[0] + vec3{1., 1., 1.} * specular_light_intensity * material.albedo[1];
+    return material.diffuse_color * diffuse_light_intensity * material.albedo[0] + vec3{1., 1., 1.} * specular_light_intensity * material.albedo[1] + reflect_color * material.albedo[2];;
 }
 
 void render(const std::vector<Sphere> &spheres, const std::vector<Light> &lights)
@@ -114,14 +118,15 @@ void render(const std::vector<Sphere> &spheres, const std::vector<Light> &lights
 }
 
 int main() {
-    Material purpel_material(vec3{0.4, 0.3, 0.1}, vec3{0.58, 0.44, 0.86}, 50);
+    Material purpel_material(vec3{0.4, 0.3, 0.3}, vec3{0.58, 0.44, 0.86}, 50);
     Material red_material(vec3{0.3, 0.1, 0.1}, vec3{1.0, 0.42, 0.42}, 10);
+    Material mirror(vec3{0.0, 10.0, 0.8}, vec3{1.0, 1.0, 1.0}, 1425);
 
     std::vector<Sphere> spheres;
     spheres.push_back(Sphere(vec3{-3,    0,   -16}, 2, purpel_material));
-    spheres.push_back(Sphere(vec3{-1.0, -1.5, -12}, 2, red_material));
+    spheres.push_back(Sphere(vec3{-1.0, -1.5, -12}, 2, mirror));
     spheres.push_back(Sphere(vec3{ 1.5, -0.5, -18}, 3, red_material));
-    spheres.push_back(Sphere(vec3{ 7,    5,   -18}, 4, purpel_material));
+    spheres.push_back(Sphere(vec3{ 7,    5,   -18}, 4, mirror));
 
     std::vector<Light>  lights;
     lights.push_back(Light(vec3{-20, 20,  20}, 1.5));
