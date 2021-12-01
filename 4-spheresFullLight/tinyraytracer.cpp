@@ -67,14 +67,14 @@ vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sphe
     }
 
     vec3 reflect_dir = reflect(dir, N).normalize();
-    vec3 reflect_orig = reflect_dir * N < 0 ? point - N*1e-3 : point + N*1e-3; // offset the original point to avoid occlusion by the object itself
+    vec3 reflect_orig = point + N*1e-3; // offset the original point to avoid occlusion by the object itself
     vec3 reflect_color = cast_ray(reflect_orig, reflect_dir, spheres, lights, depth + 1);
 
     float diffuse_light_intensity = 0, specular_light_intensity = 0;
     for (size_t i=0; i<lights.size(); i++) {
         vec3 light_dir      = (lights[i].position - point).normalize();
         float light_distance = (lights[i].position - point).norm();
-        vec3 shadow_orig = light_dir*N < 0 ? point : point + N*1e-3; // checking if the point lies in the shadow of the lights[i]
+        vec3 shadow_orig = point + N*1e-3; // checking if the point lies in the shadow of the lights[i]
         vec3 shadow_pt, shadow_N;
         Material tmpmaterial;
         if (scene_intersect(shadow_orig, light_dir, spheres, shadow_pt, shadow_N, tmpmaterial) && (shadow_pt-shadow_orig).norm() < light_distance)
@@ -83,7 +83,7 @@ vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sphe
         diffuse_light_intensity  += lights[i].intensity * std::max(0.f, light_dir*N);
         specular_light_intensity += powf(std::max(0.f, reflect(light_dir, N) * dir), material.specular_exponent) * lights[i].intensity;
     }
-    return material.diffuse_color * diffuse_light_intensity * material.albedo[0] + vec3{1., 1., 1.} * specular_light_intensity * material.albedo[1] + reflect_color * material.albedo[2];;
+    return material.diffuse_color * diffuse_light_intensity * material.albedo[0] + vec3{1., 1., 1.} * specular_light_intensity * material.albedo[1] + reflect_color*material.albedo[2];;
 }
 
 void render(const std::vector<Sphere> &spheres, const std::vector<Light> &lights)
@@ -104,7 +104,7 @@ void render(const std::vector<Sphere> &spheres, const std::vector<Light> &lights
     }
 
     std::ofstream ofs; // save the framebuffer to file
-    ofs.open("./outSpheresSpecularImage.ppm", std::ios::binary);
+    ofs.open("./outSpheresReflectImage.ppm", std::ios::binary);
     ofs << "P6\n" << width << " " << height << "\n255\n";
     for (size_t i = 0; i < height*width; ++i) {
         vec3 &c = framebuffer[i];

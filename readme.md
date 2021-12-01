@@ -20,4 +20,10 @@ https://zhuanlan.zhihu.com/p/434030501
 
 ![](./results/outSpheresWithLightImage1.png)
 
+## 光线追踪实践（四）高光、阴影和反射
+
+https://zhuanlan.zhihu.com/p/439639130
+
+![](./results/outSpheresReflectionImage.png)
+
 ## 持续更新中。。。
