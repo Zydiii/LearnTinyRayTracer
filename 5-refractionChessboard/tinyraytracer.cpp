@@ -112,7 +112,7 @@ vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sphe
     }
 
     vec3 reflect_dir = reflect(dir, N).normalize();
-    vec3 reflect_orig = reflect_dir * N < 0 ? point - N * 1e-3 : point + N * 1e-3; // offset the original point to avoid occlusion by the object itself
+    vec3 reflect_orig = point + N*1e-3; // offset the original point to avoid occlusion by the object itself
     vec3 reflect_color = cast_ray(reflect_orig, reflect_dir, spheres, lights, depth + 1);
 
     vec3 refract_dir = refract(dir, N, material.refractive_index).normalize();

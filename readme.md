@@ -26,4 +26,8 @@ https://zhuanlan.zhihu.com/p/439639130
 
 ![](./results/outSpheresReflectionImage.png)
 
-## 持续更新中。。。
+## 光线追踪实践（五）折射和棋盘
+
+
+
+![](./results/outChessboardImage.png)
